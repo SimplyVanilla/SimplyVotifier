@@ -1,11 +1,9 @@
+main: net.simplyvanilla.simplyvotifier.SimplyVotifier
 name: SimplyVotifier
-main: com.vexsoftware.votifier.VotifierPlus
-version: @version@
 description: A plugin that gets notified when votes are made for the server on toplists.
-author: BenCodez
-api-version: 1.13
-softdepend: [SuperVanish, PremiumVanish]
+version: @version@
+api-version: 1.19
+
+author: Simply Vanilla
+website: https://github.com/SimplyVanilla/SimplyChat
 folia-supported: true
-commands:
-  votifierplus:
-    description: main command
