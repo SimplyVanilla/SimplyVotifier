@@ -26,13 +26,7 @@ repositories {
         url 'https://repo.papermc.io/repository/maven-public/'
     }
     maven {
-        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
-    }
-    maven {
         url 'https://nexus.bencodez.com/repository/maven-public/'
-    }
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
     maven {
         url 'https://nexuslite.gcnt.net/repos/other/'
@@ -56,11 +50,6 @@ processResources {
 shadowJar {
     archiveClassifier.set('')
     relocate 'com.bencodez.advancedcore', 'net.simplyvanilla.dependency.advancedcore'
-    relocate 'net.pl3x.bukkit.chatapi', 'net.simplyvanilla.dependency.chatapi'
-    relocate 'me.mrten.mysqlapi', 'net.simplyvanilla.dependency.mysqlapi'
-    relocate 'com.zaxxer.HikariCP', 'net.simplyvanilla.dependency.hikaricp'
-    relocate 'com.zaxxer.hikari', 'net.simplyvanilla.dependency.hikari'
-    relocate 'org.bstats', 'net.simplyvanilla.dependency.bstats'
     minimize {
         dependencies {
             exclude('com.google')
