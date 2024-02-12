@@ -135,7 +135,8 @@ public class SimplyVotifier extends JavaPlugin {
       this.voteReceiver.start();
 
       this.getLogger().info("Votifier enabled.");
-    } catch (Exception ex) {
+    } catch (Exception e) {
+      this.getSLF4JLogger().error("Error in Votifier", e);
     }
   }
 
