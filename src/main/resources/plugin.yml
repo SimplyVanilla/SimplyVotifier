@@ -1,9 +1,9 @@
 main: net.simplyvanilla.simplyvotifier.SimplyVotifier
 name: SimplyVotifier
-description: A plugin that gets notified when votes are made for the server on toplists.
+description: A plugin that gets notified when votes are made for the server on top-lists.
 version: @version@
 api-version: 1.19
 
 author: Simply Vanilla
-website: https://github.com/SimplyVanilla/SimplyChat
+website: https://github.com/SimplyVanilla/SimplyVotifier
 folia-supported: true
