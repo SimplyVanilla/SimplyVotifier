@@ -25,18 +25,10 @@ repositories {
     maven {
         url 'https://repo.papermc.io/repository/maven-public/'
     }
-    maven {
-        url 'https://nexus.bencodez.com/repository/maven-public/'
-    }
-    maven {
-        url 'https://nexuslite.gcnt.net/repos/other/'
-    }
 }
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
-
-    implementation 'com.bencodez:advancedcore:3.7.3'
 }
 
 processResources {
