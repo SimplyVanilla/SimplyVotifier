@@ -18,22 +18,17 @@
 
 package net.simplyvanilla.simplyvotifier;
 
-import com.bencodez.advancedcore.AdvancedCorePlugin;
-import com.bencodez.advancedcore.folialib.FoliaLib;
+import java.io.File;
+import java.security.KeyPair;
 import lombok.Getter;
 import lombok.Setter;
-import net.simplyvanilla.simplyvotifier.config.Config;
 import net.simplyvanilla.simplyvotifier.crypto.RSAIO;
 import net.simplyvanilla.simplyvotifier.crypto.RSAKeygen;
 import net.simplyvanilla.simplyvotifier.model.Vote;
 import net.simplyvanilla.simplyvotifier.model.VotifierEvent;
 import net.simplyvanilla.simplyvotifier.net.VoteReceiver;
 import org.bukkit.Bukkit;
-
-import java.io.File;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.security.KeyPair;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * The main Votifier plugin class.
@@ -41,194 +36,124 @@ import java.security.KeyPair;
  * @author Blake Beaupain
  * @author Kramer Campbell
  */
-public class SimplyVotifier extends AdvancedCorePlugin {
+public class SimplyVotifier extends JavaPlugin {
 
-    /**
-     * The Votifier instance.
+  /** The Votifier instance. */
+  @Getter private static SimplyVotifier instance;
+
+  /** The vote receiver. */
+  @Getter private VoteReceiver voteReceiver;
+
+  /** The RSA key pair. */
+  @Getter @Setter private KeyPair keyPair;
+
+  @Override
+  public void onEnable() {
+    this.saveDefaultConfig();
+    this.reloadConfig();
+    File rsaDirectory = new File(this.getDataFolder() + "/rsa");
+
+    /*
+     * Create RSA directory and keys if it does not exist; otherwise, read keys.
      */
-    @Getter
-    private static SimplyVotifier instance;
+    try {
+      if (!rsaDirectory.exists()) {
+        rsaDirectory.mkdir();
+        this.keyPair = RSAKeygen.generate(2048);
+        RSAIO.save(rsaDirectory, this.keyPair);
+      } else {
+        this.keyPair = RSAIO.load(rsaDirectory);
+      }
+    } catch (Exception ex) {
+      this.getLogger().severe("Error reading configuration file or RSA keys");
+      return;
+    }
 
-    @Getter
-    private FoliaLib foliaLib;
+    this.loadVoteReceiver();
+  }
 
-    public Config config;
+  private void loadVoteReceiver() {
+    try {
+      this.voteReceiver =
+          new VoteReceiver(this.getConfig().getString("host"), this.getConfig().getInt("port")) {
 
-    /**
-     * The vote receiver.
-     */
-    @Getter
-    private VoteReceiver voteReceiver;
-
-    /**
-     * The RSA key pair.
-     */
-    @Getter
-    @Setter
-    private KeyPair keyPair;
-
-
-    @Override
-    public void onPostLoad() {
-        this.foliaLib = new FoliaLib(this);
-
-        File rsaDirectory = new File(getDataFolder() + "/rsa");
-
-        /*
-         * Create RSA directory and keys if it does not exist; otherwise, read keys.
-         */
-        try {
-            if (!rsaDirectory.exists()) {
-                rsaDirectory.mkdir();
-                keyPair = RSAKeygen.generate(2048);
-                RSAIO.save(rsaDirectory, keyPair);
-            } else {
-                keyPair = RSAIO.load(rsaDirectory);
+            @Override
+            public void logWarning(String warn) {
+              SimplyVotifier.this.getLogger().warning(warn);
             }
-        } catch (Exception ex) {
-            getLogger().severe("Error reading configuration file or RSA keys");
-            gracefulExit();
-            return;
-        }
 
-        loadVoteReceiver();
-    }
-
-    private void loadVoteReceiver() {
-        try {
-            voteReceiver = new VoteReceiver(config.getHost(), config.getPort()) {
-
-                @Override
-                public void logWarning(String warn) {
-                    getLogger().warning(warn);
-                }
-
-                @Override
-                public void logSevere(String msg) {
-                    getLogger().severe(msg);
-                }
-
-                @Override
-                public void log(String msg) {
-                    getLogger().info(msg);
-                }
-
-                @Override
-                public String getVersion() {
-                    return getDescription().getVersion();
-                }
-
-                @Override
-                public KeyPair getKeyPair() {
-                    return instance.getKeyPair();
-                }
-
-                @Override
-                public void debug(Exception e) {
-                    instance.debug(e);
-                }
-
-                @Override
-                public void debug(String debug) {
-                    instance.debug(debug);
-                }
-
-                @Override
-                public void callEvent(Vote vote) {
-                    foliaLib.getImpl().runAsync(new Runnable() {
-                        public void run() {
-                            Bukkit.getServer().getPluginManager().callEvent(new VotifierEvent(vote));
-                        }
-                    });
-                }
-            };
-            voteReceiver.start();
-
-            getLogger().info("Votifier enabled.");
-        } catch (Exception ex) {
-            gracefulExit();
-            return;
-        }
-    }
-
-    @Override
-    public void onDisable() {
-        // Interrupt the vote receiver.
-        if (voteReceiver != null) {
-            voteReceiver.shutdown();
-        }
-        getLogger().info("Votifier disabled.");
-    }
-
-    private void gracefulExit() {
-        getLogger().severe("Votifier did not initialize properly!");
-    }
-
-    @Override
-    public void onPreLoad() {
-        instance = this;
-
-        config = new Config(this);
-        config.setup();
-
-        if (config.isJustCreated()) {
-            int openPort = 8192;
-            try {
-                ServerSocket s = new ServerSocket();
-                s.bind(new InetSocketAddress("0.0.0.0", 0));
-                openPort = s.getLocalPort();
-                s.close();
-            } catch (Exception e) {
-
+            @Override
+            public void logSevere(String msg) {
+              SimplyVotifier.this.getLogger().severe(msg);
             }
-            try {
-                // First time run - do some initialization.
-                getLogger().info("Configuring Votifier for the first time...");
-                config.getData().set("port", openPort);
-                config.saveData();
 
-                /*
-                 * Remind hosted server admins to be sure they have the right port number.
-                 */
-                getLogger().info("------------------------------------------------------------------------------");
-                getLogger().info("Assigning Votifier to listen on an open port " + openPort
-                    + ". If you are hosting server on a");
-                getLogger().info("shared server please check with your hosting provider to verify that this port");
-                getLogger().info("is available for your use. Chances are that your hosting provider will assign");
-                getLogger().info("a different port, which you need to specify in config.yml");
-                getLogger().info("------------------------------------------------------------------------------");
-
-            } catch (Exception ex) {
-                getLogger().severe("Error creating configuration file");
-                debug(ex);
+            @Override
+            public void log(String msg) {
+              SimplyVotifier.this.getLogger().info(msg);
             }
-        }
-        config.loadValues();
 
-        updateAdvancedCoreHook();
+            @Override
+            public String getVersion() {
+              return SimplyVotifier.this.getDescription().getVersion();
+            }
+
+            @Override
+            public KeyPair getKeyPair() {
+              return instance.getKeyPair();
+            }
+
+            @Override
+            public void debug(Exception e) {
+              SimplyVotifier.this.getSLF4JLogger().error("Error in Votifier", e);
+            }
+
+            @Override
+            public void debug(String debug) {
+              SimplyVotifier.this.getSLF4JLogger().info(debug);
+            }
+
+            @Override
+            public void callEvent(Vote vote) {
+              if (isFolia()) {
+                Bukkit.getAsyncScheduler()
+                    .runNow(
+                        SimplyVotifier.this,
+                        scheduledTask -> {
+                          Bukkit.getServer().getPluginManager().callEvent(new VotifierEvent(vote));
+                        });
+              } else {
+                Bukkit.getScheduler()
+                    .runTask(
+                        SimplyVotifier.this,
+                        () ->
+                            Bukkit.getServer()
+                                .getPluginManager()
+                                .callEvent(new VotifierEvent(vote)));
+              }
+            }
+          };
+      this.voteReceiver.start();
+
+      this.getLogger().info("Votifier enabled.");
+    } catch (Exception ex) {
     }
+  }
 
-    @Override
-    public void onUnLoad() {
-
+  @Override
+  public void onDisable() {
+    // Interrupt the vote receiver.
+    if (this.voteReceiver != null) {
+      this.voteReceiver.shutdown();
     }
+    this.getLogger().info("Votifier disabled.");
+  }
 
-    @Override
-    public void reload() {
-        config.reloadData();
-        updateAdvancedCoreHook();
-        voteReceiver.shutdown();
-        loadVoteReceiver();
+  public static boolean isFolia() {
+    try {
+      Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
-
-    @SuppressWarnings("deprecation")
-    public void updateAdvancedCoreHook() {
-        setConfigData(config.getData());
-        setLoadRewards(false);
-        setLoadServerData(false);
-        setLoadUserData(false);
-        setLoadGeyserAPI(false);
-        setLoadLuckPerms(false);
-    }
-
+  }
 }
