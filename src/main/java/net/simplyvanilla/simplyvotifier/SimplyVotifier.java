@@ -49,6 +49,7 @@ public class SimplyVotifier extends JavaPlugin {
 
   @Override
   public void onEnable() {
+    instance = this;
     this.saveDefaultConfig();
     this.reloadConfig();
     File rsaDirectory = new File(this.getDataFolder() + "/rsa");
