@@ -38,9 +38,6 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class SimplyVotifier extends JavaPlugin {
 
-  /** The Votifier instance. */
-  @Getter private static SimplyVotifier instance;
-
   /** The vote receiver. */
   @Getter private VoteReceiver voteReceiver;
 
@@ -49,7 +46,6 @@ public class SimplyVotifier extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    SimplyVotifier.instance = this;
     this.saveDefaultConfig();
     this.reloadConfig();
     File rsaDirectory = new File(this.getDataFolder() + "/rsa");
@@ -100,7 +96,7 @@ public class SimplyVotifier extends JavaPlugin {
 
             @Override
             public KeyPair getKeyPair() {
-              return instance.getKeyPair();
+              return SimplyVotifier.this.getKeyPair();
             }
 
             @Override
