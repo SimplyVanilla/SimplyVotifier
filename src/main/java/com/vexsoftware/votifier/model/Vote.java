@@ -16,7 +16,7 @@
  * along with Votifier.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.simplyvanilla.simplyvotifier.model;
+package com.vexsoftware.votifier.model;
 
 import lombok.Getter;
 import lombok.Setter;

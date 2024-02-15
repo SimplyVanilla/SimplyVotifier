@@ -1,4 +1,4 @@
-package net.simplyvanilla.simplyvotifier.model;
+package com.vexsoftware.votifier.model;
 
 import lombok.Getter;
 import org.bukkit.Bukkit;

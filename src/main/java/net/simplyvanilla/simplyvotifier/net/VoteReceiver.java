@@ -19,7 +19,7 @@
 package net.simplyvanilla.simplyvotifier.net;
 
 import net.simplyvanilla.simplyvotifier.crypto.RSA;
-import net.simplyvanilla.simplyvotifier.model.Vote;
+import com.vexsoftware.votifier.model.Vote;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
