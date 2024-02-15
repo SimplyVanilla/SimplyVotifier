@@ -1,6 +1,7 @@
 package net.simplyvanilla.simplyvotifier.model;
 
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -29,6 +30,7 @@ public class VotifierEvent extends Event {
      * @param vote vote record
      */
     public VotifierEvent(final Vote vote) {
+        super(!Bukkit.isPrimaryThread());
         this.vote = vote;
     }
 
